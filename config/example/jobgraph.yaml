@@ -1,0 +1,49 @@
+apiVersion: jobgraph/v1
+kind: JobGraph
+metadata:
+  name: example-graph-name
+  context: seoblogs # optional, default setting to all job
+spec:
+  singleton: false # can run multiple paralel? default is true
+  cron: [
+    "* * * * 1",
+    "* * * 2 *"
+  ]
+  webhook:
+    endpoint: example-uri
+    secret: secret-file-path
+  jobs:
+    - name: Compile
+      context: seoblogs # optional, you can run job in different context (you will get different workspace directory)
+      jobTemplate: compile-job-template.yaml
+      timeout: 10 # in minutes
+      onFail:
+        piplineStop: false
+        jobTemplate: steps/compile/compile-fail-job-template.yaml
+        waitWithNextStep: false
+        timeout: 10 # in minutes
+      onSuccess:
+        jobTemplate: steps/compile/compile-success-job-template.yaml
+        waitWithNextStep: true
+        timeout: 10 # in minutes
+  subrutines:
+    - name: subrutineName
+      try:
+        - name: compile
+          type: job
+          job: Compile
+        - name: callCleaner
+          type: call
+          call: Foo
+        - name: build
+          type: job
+          job: Build
+      catch:
+        - name: errorReport
+          type: job
+          job: report
+      finally:
+        - name: Cleaner
+          type: job
+          job: cleaner
+    - name: Foo

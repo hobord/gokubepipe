@@ -1,0 +1,49 @@
+apiVersion: pipeline/v1
+kind: Pipline
+metadata:
+  name: example-pipline-name
+  context: seoblogs # optional, default setting to all job
+spec:
+  singleton: false # can run multiple paralel? default is true
+  webhook:
+    endpoint: example-uri
+    secret: secret-file-path
+  tasks:
+    - name:
+      spec:
+  flow:
+    - flowId: foo1
+      taskname: foo
+      success: foo2
+      fail: end
+    - flowId: foo2
+      taskname: baar
+      success: foo1
+      fail: end
+
+  steps:
+  - name: compile
+    context: seoblogs # optional, you can run job in different context (you will get different workspace directory)
+    jobTemplate: compile-job-template.yaml
+    timeout: 10 # in minutes
+    onFail:
+      piplineStop: false
+      jobTemplate: steps/compile/compile-fail-job-template.yaml
+      waitWithNextStep: false
+      timeout: 10 # in minutes
+    onSuccess:
+      jobTemplate: steps/compile/compile-success-job-template.yaml
+      waitWithNextStep: true
+      timeout: 10 # in minutes
+  - name: build
+    jobTemplate: job-template.yaml
+  - name: test
+    jobTemplate: job-template.yaml
+    onFail:
+      jobTemplate: compile-fail-job-template.yaml
+  - name: deploy
+    jobTemplate: job-template.yaml
+  onFail:
+    jobTemplate: compile-fail-pipline-template.yaml
+    cleanWorkspace:  false
+    keepLogFiles: true

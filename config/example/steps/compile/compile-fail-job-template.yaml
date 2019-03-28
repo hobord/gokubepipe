@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: _#PIPELINE.NAME#_/_#PIPELINE.BUILD_NUMBER#_-compile-fail-job
+  namespace: seoblogs  
+spec:
+  template:
+    spec:
+      imagePullSecrets:
+      - name: regcred
+      dnsConfig:
+        nameservers:
+        - 10.20.96.10
+        - 10.20.96.11
+      dnsPolicy: None
+      containers:
+      - name: compiler-fail
+        image: nodejs
+        env:
+        - name: FAIL_REASON
+          value: _#PIPELINE.FAIL_REASON#_  # TIMEOUT | ERROR
+        - name: PIPELINE_BUILD_NUMBER
+          value: _#PIPELINE.BUILD_NUMBER#_
+        - name: PIPELINE_NAME
+          value: _#PIPELINE.NAME#_
+        - name: PIPELINE_BUILD_NUMBER
+          value: _#PIPELINE.BUILD_NUMBER#_
+        volumeMounts:
+        - mountPath: /workspace/
+          name: pipline-workspace-pv
+          subPath: /workspaces/_#PIPELINE.NAME#_/_#PIPELINE.BUILD_NUMBER#_
+      restartPolicy: Never
+    volumes:
+      - name: pipline-workspace-pv
+        persistentVolumeClaim:
+          claimName: piplines-pv-claim
