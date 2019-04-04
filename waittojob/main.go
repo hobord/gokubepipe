@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/hobord/gokubepipe/kubeclient"
@@ -13,6 +14,12 @@ import (
 func main() {
 	namespaceName := flag.String("n", "", "namespace")
 	jobName := flag.String("j", "", "job name")
+	flag.Parse()
+	if *jobName == "" {
+		fmt.Println("Job name parameter is mandatory! Use -p=jobname ")
+		os.Exit(2)
+	}
+
 	clientset := kubeclient.GetClientset()
 
 	jobs, err := clientset.BatchV1().Jobs(*namespaceName).List(metav1.ListOptions{})
