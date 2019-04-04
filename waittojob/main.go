@@ -27,7 +27,16 @@ func main() {
 
 	if myJob.Status.Succeeded != 0 {
 		for myJob.Status.Succeeded != 1 {
+			if myJob.Status.Failed == 1 {
+				panic("Job failed")
+			}
 			time.Sleep(10 * time.Second)
 		}
+		if myJob.Status.Failed == 1 {
+			panic("Job failed")
+		}
+	}
+	if myJob.Status.Failed == 1 {
+		panic("Job failed")
 	}
 }
